@@ -113,10 +113,10 @@ The prototype has three components:
 
 ### 6.2 Recommended Project Artifacts
 1. `data/transfers.json` - prototype input snapshot from query output.
-2. `scripts/build-accumulator.ts` - aggregation + tree builder.
+2. `modules/accumulator/scripts/build-accumulator.ts` - aggregation + tree builder.
 3. `data/accumulator.json` - runtime dataset for UI lookups/proof derivation + build metadata/checksums.
-4. `contracts/RecoveryVerifier.sol` - Solidity verifier.
-5. `ui/` - frontend app.
+4. `modules/foundry/RecoveryVerifier.sol` - Solidity verifier.
+5. `modules/web/` - frontend app.
 6. `REPRODUCIBILITY.md` - third-party verification instructions and expected outputs.
 
 ### 6.3 Determinism Requirements
@@ -155,7 +155,7 @@ The prototype has three components:
   },
   "build": {
     "script": {
-      "file": "scripts/build-accumulator.ts",
+        "file": "modules/accumulator/scripts/build-accumulator.ts",
       "packageVersion": "0.1.0"
     },
     "runtime": {

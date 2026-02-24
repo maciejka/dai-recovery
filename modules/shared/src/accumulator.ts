@@ -340,7 +340,7 @@ export async function buildAndWriteArtifacts(
   const addresses = computed.claims.map((claim) => claim.address);
   const amounts = computed.claims.map((claim) => claim.totalLost.toString());
 
-  const projectRoot = resolve(outputDir, '..', '..');
+  const projectRoot = resolve(outputDir, '..');
   const packageVersion = await loadPackageVersion(projectRoot);
 
   const accumulator = {
@@ -364,7 +364,7 @@ export async function buildAndWriteArtifacts(
     },
     build: {
       script: {
-        file: 'scripts/build-accumulator.ts',
+        file: 'modules/accumulator/scripts/build-accumulator.ts',
         packageVersion,
       },
       runtime: {

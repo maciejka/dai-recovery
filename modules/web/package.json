@@ -1,0 +1,31 @@
+{
+  "name": "dai-recovery-ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync:accumulator": "node scripts/sync-accumulator.mjs",
+    "dev": "bun run sync:accumulator && vite",
+    "build": "bun run sync:accumulator && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p ../../tsconfig.json && tsc -p tsconfig.node.json"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "connectkit": "^1.9.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "viem": "^2.46.3",
+    "wagmi": "2"
+  },
+  "devDependencies": {
+    "@types/react": "18",
+    "@types/react-dom": "18",
+    "@vitejs/plugin-react": "4",
+    "typescript": "^5.9.3",
+    "vite": "5",
+    "vitest": "1.6.0"
+  }
+}

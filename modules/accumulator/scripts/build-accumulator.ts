@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { buildAndWriteArtifacts } from '../src/accumulator';
+import { buildAndWriteArtifacts } from '../../shared/src/accumulator';
 
 const INPUT_PATH = resolve(process.cwd(), 'data/transfers.json');
 const OUTPUT_DIR = resolve(process.cwd(), 'data');

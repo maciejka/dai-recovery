@@ -25,7 +25,7 @@ Exit criteria:
 
 ## 3. Workstream A - Data Pipeline and Artifacts (M2)
 ### Implementation
-1. Build `scripts/build-accumulator.ts`:
+1. Build `modules/accumulator/scripts/build-accumulator.ts`:
    - Read `data/transfers.json` and validate `result.rows[]`.
    - Normalize addresses consistently (lowercase or checksum; pick one and lock it).
    - Parse `amount` as integer-safe (`BigInt`) values.
@@ -57,7 +57,7 @@ Exit criteria:
 
 ## 4. Workstream B - Solidity Verifier (M3)
 ### Implementation
-1. Create `contracts/RecoveryVerifier.sol`:
+1. Create `modules/foundry/RecoveryVerifier.sol`:
    - immutable `merkleRoot` in constructor
    - `verify(address,uint256,bytes32[]) external view returns (bool)`
    - in-contract sorted-pair Merkle proof verification compatible with standard `MerkleProof.verify` semantics
@@ -76,7 +76,7 @@ Exit criteria:
 
 ## 5. Workstream C - UI Lookup and Verify Flow (M4)
 ### Implementation
-1. Build `ui/` app (TypeScript):
+1. Build `modules/web/` app (TypeScript):
    - Manual address input
    - MetaMask connect and autofill
    - Address normalization aligned with pipeline
@@ -131,4 +131,4 @@ Exit criteria:
 ## 9. Immediate Next Actions
 1. Update `data/transfers.json` (or pre-processing step) to use `amount` key consistently.
 2. Scaffold repository structure and initialize TypeScript + Foundry + UI workspaces.
-3. Implement `scripts/build-accumulator.ts` first, including strict `amount` validation and zero filtering.
+3. Implement `modules/accumulator/scripts/build-accumulator.ts` first, including strict `amount` validation and zero filtering.

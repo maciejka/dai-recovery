@@ -1,0 +1,174 @@
+:root {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  color: #092731;
+  background-color: #f4f6f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.background-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(194, 232, 209, 0.75),
+      transparent 45%
+    ),
+    radial-gradient(circle at 80% 0%, rgba(237, 205, 137, 0.6), transparent 40%),
+    linear-gradient(135deg, #f4f6f2 0%, #e9efec 100%);
+  z-index: 0;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(9, 39, 49, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(9, 39, 49, 0.16);
+  padding: 24px;
+  animation: panel-in 280ms ease-out;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-header h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  color: #2f6668;
+}
+
+.status-line {
+  margin: 10px 0 0;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: 0.82rem;
+  color: #315763;
+  word-break: break-word;
+}
+
+.controls {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+textarea {
+  border-radius: 10px;
+  border: 1px solid rgba(9, 39, 49, 0.3);
+  padding: 10px 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #174f5d;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+button:hover {
+  background: #0f414d;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.result-card {
+  margin-top: 18px;
+  border: 1px solid rgba(9, 39, 49, 0.2);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(230, 238, 239, 0.4);
+}
+
+.result-card h2 {
+  margin-top: 0;
+}
+
+.success-line {
+  color: #14683f;
+  font-weight: 600;
+}
+
+.error-line {
+  color: #8e2f18;
+  font-weight: 600;
+}
+
+.meta {
+  margin-top: 18px;
+  font-size: 0.9rem;
+  color: #315763;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 12px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+}

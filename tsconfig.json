@@ -7,7 +7,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["bun-types"]
   },
-  "include": ["scripts", "src", "test"]
+  "include": ["modules/accumulator", "modules/shared", "modules/web/src"]
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@dai-recovery/accumulator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun run scripts/build-accumulator.ts"
+  }
+}

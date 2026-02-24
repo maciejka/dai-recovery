@@ -11,16 +11,16 @@ Out of scope:
 2. Double-claim prevention.
 
 ## 2. High-Level Components
-1. Data Pipeline (`scripts/build-accumulator.ts`)
+1. Data Pipeline (`modules/accumulator/scripts/build-accumulator.ts`)
    - Reads versioned input JSON (`data/transfers.json`).
    - Validates rows and filters to eligible transfers.
    - Aggregates `totalLost` per claimant (`sender` address in input rows).
    - Builds Merkle tree and outputs reproducible artifacts.
-2. Smart Contract (`contracts/RecoveryVerifier.sol`)
+2. Smart Contract (`modules/foundry/RecoveryVerifier.sol`)
    - Stores immutable `merkleRoot` in constructor.
    - Exposes `verify(address,uint256,bytes32[]) -> bool`.
    - Uses in-contract sorted-pair Merkle proof verification logic compatible with common `MerkleProof.verify` semantics.
-3. Web UI (`ui/`)
+3. Web UI (`modules/web/`)
    - Manual address input and MetaMask connect.
    - Finds amount/proof data from precomputed artifact.
    - Calls verifier contract on Sepolia via `eth_call`.

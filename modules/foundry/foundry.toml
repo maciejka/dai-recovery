@@ -1,7 +1,7 @@
 [profile.default]
-src = "contracts"
-test = "contracts"
-script = "script"
+src = "."
+test = "."
+script = "."
 out = "out"
 libs = ["lib"]
 optimizer = true

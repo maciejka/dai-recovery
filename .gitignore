@@ -3,3 +3,8 @@ data/accumulator.json
 out/
 cache/
 broadcast/
+modules/web/dist/
+modules/web/public/accumulator.json
+modules/foundry/out/
+modules/foundry/cache/
+modules/foundry/broadcast/
