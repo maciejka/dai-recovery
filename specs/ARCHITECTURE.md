@@ -19,7 +19,7 @@ Out of scope:
 2. Smart Contract (`contracts/RecoveryVerifier.sol`)
    - Stores immutable `merkleRoot` in constructor.
    - Exposes `verify(address,uint256,bytes32[]) -> bool`.
-   - Uses OpenZeppelin `MerkleProof.verify`.
+   - Uses in-contract sorted-pair Merkle proof verification logic compatible with common `MerkleProof.verify` semantics.
 3. Web UI (`ui/`)
    - Manual address input and MetaMask connect.
    - Finds amount/proof data from precomputed artifact.
@@ -57,7 +57,7 @@ Out of scope:
 
 ## 8. Minimal Tech Stack
 1. TypeScript for pipeline and UI.
-2. Solidity + OpenZeppelin for verifier contract.
+2. Solidity for verifier contract.
 3. `viem` (and optional `wagmi`) for wallet/contract interaction.
 4. Sepolia RPC provider for initial deployment and verification calls.
 5. Foundry for solidity development

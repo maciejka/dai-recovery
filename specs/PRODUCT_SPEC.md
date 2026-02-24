@@ -52,7 +52,7 @@ The prototype has three components:
    - `leaf = keccak256(abi.encode(address, totalLost))`
 3. Tree mode is fixed to sorted-pair hashing:
    - `parent = keccak256(min(childA, childB) || max(childA, childB))`
-   - This keeps proofs direction-agnostic and aligns with OpenZeppelin `MerkleProof.verify`.
+   - This keeps proofs direction-agnostic and aligns with common MerkleProof verification semantics.
 4. Odd-node handling is fixed to `duplicate_last`:
    - when a level has an unpaired node `X`, compute parent as `keccak256(min(X, X) || max(X, X))`.
    - this rule must be used consistently in script, artifacts, and proof generation.
@@ -74,7 +74,7 @@ The prototype has three components:
 1. Constructor argument sets immutable `merkleRoot`.
 2. Expose proof verification function, e.g.:
    - `function verify(address account, uint256 totalAmount, bytes32[] calldata proof) external view returns (bool)`
-3. Verification uses OpenZeppelin `MerkleProof` utility (or equivalent audited implementation).
+3. Verification uses sorted-pair Merkle proof logic equivalent to standard `MerkleProof.verify` behavior.
 4. Onchain verifier and offchain generator must use identical hashing assumptions:
    - leaf encoding: `abi.encode(address,uint256)`
    - hash: `keccak256`

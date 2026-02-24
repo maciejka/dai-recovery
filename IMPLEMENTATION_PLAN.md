@@ -60,7 +60,7 @@ Exit criteria:
 1. Create `contracts/RecoveryVerifier.sol`:
    - immutable `merkleRoot` in constructor
    - `verify(address,uint256,bytes32[]) external view returns (bool)`
-   - OpenZeppelin `MerkleProof.verify`
+   - in-contract sorted-pair Merkle proof verification compatible with standard `MerkleProof.verify` semantics
 2. Configure Foundry project and deployment scripts for Sepolia.
 
 ### Tests

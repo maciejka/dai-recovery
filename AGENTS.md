@@ -10,11 +10,16 @@ Do not duplicate product or architecture rules in code comments or PR descriptio
 - `src/accumulator.ts`: accumulator implementation.
 - `scripts/build-accumulator.ts`: build entrypoint.
 - `test/accumulator.test.ts`: test suite.
+- `contracts/`: Solidity verifier contract and co-located Foundry test (`*.t.sol`).
+- `script/`: Foundry deployment script(s).
 - `data/transfers.json`: versioned input snapshot.
 - `data/accumulator.json`: generated artifact (ignored by git).
 
 ## Build, Test, and Typecheck
 - `bun run build:merkle`: rebuild `data/accumulator.json` from `data/transfers.json`.
+- `bun run sol:build`: compile Solidity contracts with Foundry.
+- `bun run sol:test`: run Solidity tests.
+- `bun run sol:deploy:sepolia`: deploy verifier using Foundry (requires `MERKLE_ROOT`, `SEPOLIA_RPC_URL`, and `PRIVATE_KEY`).
 - `bun run format`: apply Biome formatting to source and config files.
 - `bun run format:check`: verify formatting without writing changes.
 - `bun run lint`: run Biome lint checks on `scripts/`, `src/`, and `test/`.
