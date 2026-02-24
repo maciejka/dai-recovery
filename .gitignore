@@ -8,3 +8,4 @@ modules/web/public/accumulator.json
 modules/foundry/out/
 modules/foundry/cache/
 modules/foundry/broadcast/
+modules/web/.env.local

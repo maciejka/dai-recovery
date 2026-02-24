@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ConnectKitButton } from 'connectkit';
-import { formatUnits } from 'viem';
 import { useAccount, usePublicClient } from 'wagmi';
 import { networkConfig } from './config/network';
 import {
@@ -9,7 +8,7 @@ import {
   type AccumulatorArtifact,
   type ClaimLookupResult,
 } from './lib/accumulator';
-import { normalizeAddress, resolveLookupTarget } from './lib/addresses';
+import { normalizeAddress } from './lib/addresses';
 import { verifyClaimWithEthCall, type VerificationResult } from './lib/verify';
 
 type ArtifactState =
@@ -23,8 +22,22 @@ type LookupState =
   | { status: 'not_found'; address: string }
   | { status: 'error'; message: string };
 
-function formatProof(proof: `0x${string}`[]): string {
-  return proof.join(', ');
+const WEI_PER_CENT = 10n ** 16n;
+const HALF_CENT_IN_WEI = 5n * 10n ** 15n;
+const SIMULATED_VERIFICATION_DELAY_MS = 1200;
+
+function formatDaiMoney(amount: bigint): string {
+  const roundedCents = (amount + HALF_CENT_IN_WEI) / WEI_PER_CENT;
+  const whole = roundedCents / 100n;
+  const cents = roundedCents % 100n;
+  const groupedWhole = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
+  return `${groupedWhole}.${cents.toString().padStart(2, '0')}`;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 export default function App() {
@@ -37,6 +50,7 @@ export default function App() {
   });
   const [verificationState, setVerificationState] =
     useState<VerificationResult | null>(null);
+  const lastAutoVerificationKeyRef = useRef<string | null>(null);
 
   const {
     address: connectedAddress,
@@ -86,59 +100,47 @@ export default function App() {
   const artifact =
     artifactState.status === 'ready' ? artifactState.artifact : null;
 
-  const runLookup = useCallback(
-    (source: { useWalletAddress: boolean }) => {
-      setVerificationState(null);
+  useEffect(() => {
+    if (!connectedAddress) {
+      return;
+    }
 
-      if (!artifact) {
-        setLookupState({
-          status: 'error',
-          message: 'Accumulator artifact is not loaded yet.',
-        });
+    setAddressInput(normalizeAddress(connectedAddress));
+  }, [connectedAddress]);
+
+  useEffect(() => {
+    setVerificationState(null);
+
+    if (!artifact) {
+      return;
+    }
+
+    const trimmed = addressInput.trim();
+    if (!trimmed) {
+      setLookupState({ status: 'idle' });
+      return;
+    }
+
+    try {
+      const normalized = normalizeAddress(trimmed);
+      const claim = lookupClaim(artifact, normalized);
+
+      if (!claim) {
+        setLookupState({ status: 'not_found', address: normalized });
         return;
       }
 
-      try {
-        const normalizedAddress = resolveLookupTarget({
-          manualInput: addressInput,
-          walletAddress: connectedAddress,
-          useWalletAddress: source.useWalletAddress,
-        });
-
-        setAddressInput(normalizedAddress);
-        const claim = lookupClaim(artifact, normalizedAddress);
-
-        if (!claim) {
-          setLookupState({ status: 'not_found', address: normalizedAddress });
-          return;
-        }
-
-        setLookupState({ status: 'found', claim });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        setLookupState({ status: 'error', message });
+      setLookupState({ status: 'found', claim });
+    } catch (error) {
+      if (trimmed.length < 42) {
+        setLookupState({ status: 'idle' });
+        return;
       }
-    },
-    [addressInput, artifact, connectedAddress],
-  );
 
-  useEffect(() => {
-    if (!connectedAddress || !artifact) {
-      return;
+      const message = error instanceof Error ? error.message : String(error);
+      setLookupState({ status: 'error', message });
     }
-
-    const normalized = normalizeAddress(connectedAddress);
-    setAddressInput(normalized);
-    const claim = lookupClaim(artifact, normalized);
-
-    if (!claim) {
-      setLookupState({ status: 'not_found', address: normalized });
-      return;
-    }
-
-    setLookupState({ status: 'found', claim });
-    setVerificationState(null);
-  }, [artifact, connectedAddress]);
+  }, [addressInput, artifact]);
 
   const configuredRootMismatch =
     artifact &&
@@ -146,15 +148,15 @@ export default function App() {
     networkConfig.merkleRoot.toLowerCase() !==
       artifact.merkle.root.toLowerCase();
 
-  const canVerify =
-    lookupState.status === 'found' && !configuredRootMismatch && publicClient;
-
-  const handleVerify = useCallback(async () => {
-    if (lookupState.status !== 'found' || !publicClient || !artifact) {
+  async function runVerification(
+    claim: ClaimLookupResult,
+    verificationKey: string,
+  ) {
+    if (!publicClient || !artifact) {
       return;
     }
 
-    const claim = lookupState.claim;
+    await sleep(SIMULATED_VERIFICATION_DELAY_MS);
 
     const result = await verifyClaimWithEthCall(
       {
@@ -172,131 +174,148 @@ export default function App() {
       (params) => publicClient.readContract(params),
     );
 
+    if (lastAutoVerificationKeyRef.current !== verificationKey) {
+      return;
+    }
+
     setVerificationState(result);
+  }
+
+  useEffect(() => {
+    if (lookupState.status !== 'found') {
+      lastAutoVerificationKeyRef.current = null;
+      return;
+    }
+
+    const claim = lookupState.claim;
+    const autoVerificationKey = `${claim.address}:${claim.totalLostRaw}:${connectedChainId ?? 'none'}`;
+    if (lastAutoVerificationKeyRef.current === autoVerificationKey) {
+      return;
+    }
+
+    lastAutoVerificationKeyRef.current = autoVerificationKey;
+    void runVerification(claim, autoVerificationKey);
   }, [artifact, connectedChainId, isConnected, lookupState, publicClient]);
 
-  const statusBanner = useMemo(() => {
-    if (artifactState.status === 'loading') {
-      return 'Loading accumulator dataset...';
-    }
-
-    if (artifactState.status === 'error') {
-      return `Dataset error: ${artifactState.message}`;
-    }
-
-    return `Dataset ready. Merkle root: ${artifactState.artifact.merkle.root}`;
-  }, [artifactState]);
+  const verificationBadge =
+    verificationState === null
+      ? { text: 'Checking', className: 'badge badge-pending' }
+      : verificationState.status === 'valid'
+        ? { text: 'Valid', className: 'badge badge-valid' }
+        : verificationState.status === 'invalid'
+          ? { text: 'Invalid', className: 'badge badge-invalid' }
+          : { text: 'Error', className: 'badge badge-invalid' };
 
   return (
     <main className="app-shell">
       <div className="background-gradient" />
       <section className="panel">
         <header className="panel-header">
-          <p className="eyebrow">Lost DAI Recovery</p>
-          <h1>Lookup and Sepolia Verification</h1>
-          <p className="status-line">{statusBanner}</p>
+          <div className="header-top">
+            <h1>Dai Recovery</h1>
+            <div className="header-actions">
+              <ConnectKitButton showBalance={false} />
+            </div>
+          </div>
+
+          <div className="meta-grid">
+            <article className="meta-item meta-item-group">
+              <p className="meta-line">
+                <span className="label-text">Accumulator Root</span>{' '}
+                <span className="meta-inline-value" title={artifact?.merkle.root}>
+                  {artifact
+                    ? artifact.merkle.root
+                    : artifactState.status === 'loading'
+                      ? 'Loading...'
+                      : artifactState.status === 'error'
+                        ? `Unavailable (${artifactState.message})`
+                        : 'Unavailable'}
+                </span>
+              </p>
+              <p className="meta-line">
+                <span className="label-text">Verifier Address</span>{' '}
+                <span
+                  className="meta-inline-value"
+                  title={networkConfig.verifierAddress ?? undefined}
+                >
+                  {networkConfig.verifierAddress ?? 'Not configured'}
+                </span>
+              </p>
+            </article>
+          </div>
         </header>
 
-        <div className="controls">
-          <label htmlFor="wallet-address">Address</label>
-          <input
-            id="wallet-address"
-            value={addressInput}
-            onChange={(event) => setAddressInput(event.target.value)}
-            placeholder="0x..."
-            autoComplete="off"
-          />
-
-          <div className="actions">
-            <button
-              type="button"
-              onClick={() => runLookup({ useWalletAddress: false })}
-            >
-              Lookup Address
-            </button>
-            <button
-              type="button"
-              onClick={() => runLookup({ useWalletAddress: true })}
-              disabled={!connectedAddress}
-            >
-              Use Wallet
-            </button>
-            <ConnectKitButton showBalance={false} />
+        <section className="result-card">
+          <div className="result-controls">
+            <div className="address-row">
+              <label className="label-text" htmlFor="wallet-address">
+                Address
+              </label>
+              <input
+                className="address-input"
+                id="wallet-address"
+                value={addressInput}
+                onChange={(event) => setAddressInput(event.target.value)}
+                placeholder="0x..."
+                autoComplete="off"
+              />
+            </div>
           </div>
-        </div>
 
-        {lookupState.status === 'found' && (
-          <section className="result-card">
-            <h2>Claim Found</h2>
-            <p>
-              <strong>Address:</strong> {lookupState.claim.address}
+          {artifactState.status === 'loading' && (
+            <p className="result-message">Loading accumulator dataset...</p>
+          )}
+          {artifactState.status === 'error' && (
+            <p className="result-message error-line">
+              Dataset error: {artifactState.message}
             </p>
-            <p>
-              <strong>Total Lost (raw):</strong>{' '}
-              {lookupState.claim.totalLostRaw}
+          )}
+
+          {configuredRootMismatch && (
+            <p className="result-message error-line">
+              Config root mismatch: `VITE_MERKLE_ROOT` does not match the loaded
+              accumulator.
             </p>
-            <p>
-              <strong>Total Lost (DAI):</strong>{' '}
-              {formatUnits(lookupState.claim.totalLost, 18)}
+          )}
+
+          {lookupState.status === 'idle' && (
+            <p className="result-message">
+              Enter an address to check lost dai claim.
             </p>
-            <p>
-              <strong>Proof Length:</strong> {lookupState.claim.proof.length}
+          )}
+
+          {lookupState.status === 'found' && (
+            <div className="result-list">
+              <p className="result-row">
+                <span className="label-text">Total Lost (DAI)</span>
+                <span className="row-value">{formatDaiMoney(lookupState.claim.totalLost)}</span>
+              </p>
+              <p className="result-row">
+                <span className="label-text">Verification</span>
+                <span className={verificationBadge.className}>
+                  {verificationBadge.text}
+                </span>
+              </p>
+              {verificationState?.status === 'error' && (
+                <p className="result-message error-line">
+                  Verification failed: {verificationState.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {lookupState.status === 'not_found' && (
+            <p className="result-message error-line">
+              No dataset entry for {lookupState.address}.
             </p>
-            <textarea
-              readOnly
-              value={formatProof(lookupState.claim.proof)}
-              rows={4}
-              aria-label="Merkle proof"
-            />
+          )}
 
-            <button
-              type="button"
-              onClick={() => void handleVerify()}
-              disabled={!canVerify}
-            >
-              Verify on Sepolia
-            </button>
-          </section>
-        )}
-
-        {lookupState.status === 'not_found' && (
-          <p className="error-line">
-            No dataset entry for {lookupState.address}.
-          </p>
-        )}
-
-        {lookupState.status === 'error' && (
-          <p className="error-line">Lookup error: {lookupState.message}</p>
-        )}
-
-        {configuredRootMismatch && (
-          <p className="error-line">
-            Config root mismatch: `VITE_MERKLE_ROOT` does not match the loaded
-            accumulator.
-          </p>
-        )}
-
-        {verificationState?.status === 'valid' && (
-          <p className="success-line">Verification result: valid tuple.</p>
-        )}
-        {verificationState?.status === 'invalid' && (
-          <p className="error-line">Verification result: invalid tuple.</p>
-        )}
-        {verificationState?.status === 'error' && (
-          <p className="error-line">
-            Verification failed: {verificationState.message}
-          </p>
-        )}
-
-        <footer className="meta">
-          <p>Configured chain ID: {networkConfig.chainId}</p>
-          <p>Configured RPC URL: {networkConfig.rpcUrl}</p>
-          <p>
-            Verifier address:{' '}
-            {networkConfig.verifierAddress ??
-              'Set VITE_VERIFIER_ADDRESS in modules/web/.env'}
-          </p>
-        </footer>
+          {lookupState.status === 'error' && (
+            <p className="result-message error-line">
+              Lookup error: {lookupState.message}
+            </p>
+          )}
+        </section>
       </section>
     </main>
   );

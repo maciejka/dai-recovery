@@ -6,7 +6,7 @@ This prototype helps users check whether they are eligible to recover DAI accide
 The prototype has three components:
 1. A data pipeline script that reads a JSON list of mistaken transfers and builds an address-level aggregated Merkle accumulator.
 2. A Solidity verifier contract deployed to Sepolia that validates Merkle proofs against an immutable root set in the constructor.
-3. A web UI that lets users either paste an Ethereum address or connect a wallet, then fetches and displays the precomputed aggregate amount and Merkle proof path for that address.
+3. A web UI that lets users either paste an Ethereum address or connect a wallet, then fetches and displays the precomputed aggregate amount for that address and runs onchain proof verification.
 
 ## 2. Goals
 1. Prove that an address and total lost amount can be verified onchain with a Merkle proof.
@@ -26,7 +26,7 @@ The prototype has three components:
 1. As a user, I can paste an Ethereum address and see whether it exists in the recovery dataset.
 2. As a user, I can connect my wallet and auto-check the connected address.
 3. As a user, I can see the aggregated amount of lost DAI assigned to my address.
-4. As a user, I can verify (via contract call) that my address + amount + proof is valid against the fixed Merkle root.
+4. As a user, I can see whether my address + amount + proof is valid against the fixed Merkle root via onchain verification.
 
 ## 5. Functional Requirements
 
@@ -61,13 +61,14 @@ The prototype has three components:
 
 ### 5.4 UI
 1. Input mode A: manual ETH address entry.
-2. Input mode B: MetaMask wallet connect (connected address auto-filled).
+2. Input mode B: MetaMask wallet connect (connected address auto-filled, lookup runs automatically).
 3. On lookup:
    - find address in `accumulator.json`
-   - show `totalLost` and derived Merkle proof path
+   - show `totalLost`
+   - derive Merkle proof path internally for verification
    - indicate if address not found
-4. Add “Verify on Sepolia” action:
-   - calls verifier contract via `eth_call` to proof-check function
+4. Trigger “Verify on Chain” automatically when a claim is found:
+   - calls verifier contract via `eth_call` on the configured chain to proof-check function
    - displays valid/invalid result
 
 ### 5.5 Smart Contract (Phase 1)
@@ -198,8 +199,8 @@ The prototype has three components:
 
 ### 9.3 UI Tests
 1. Manual address lookup success/failure.
-2. Wallet connect path.
-3. Verify button surfaces onchain validation result.
+2. Wallet connect path auto-fills the address input.
+3. Onchain validation runs automatically when a claim is found and surfaces valid/invalid/error result.
 
 ## 10. Milestones
 1. M1: Finalize input schema and Merkle spec.
@@ -211,7 +212,7 @@ The prototype has three components:
 
 ## 11. Acceptance Criteria (Prototype)
 1. Given an eligible address, UI shows aggregated amount and proof.
-2. UI verification call to Sepolia contract returns valid for correct tuple.
+2. UI verification call to configured verifier contract returns valid for correct tuple.
 3. Invalid tuple fails verification.
 4. Contract root matches generated artifact root.
 5. Full flow reproducible from versioned input JSON.

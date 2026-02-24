@@ -23,7 +23,7 @@ Out of scope:
 3. Web UI (`modules/web/`)
    - Manual address input and MetaMask connect.
    - Finds amount/proof data from precomputed artifact.
-   - Calls verifier contract on Sepolia via `eth_call`.
+   - Calls verifier contract on the configured chain via `eth_call`.
 
 ## 3. Design Constraints (Authoritative in Product Spec)
 1. Data eligibility, Merkle construction, and hashing assumptions are defined in `PRODUCT_SPEC.md` section `5.1` through `5.3`.
@@ -40,14 +40,14 @@ Out of scope:
 1. User opens UI.
 2. User enters address or connects MetaMask.
 3. UI normalizes address and checks artifact membership.
-4. If found, UI resolves `totalLost` and proof path.
-5. UI calls contract `verify(account, totalLost, proof)`.
+4. If found, UI resolves `totalLost` and proof path (proof is used internally).
+5. UI calls contract `verify(account, totalLost, proof)` automatically.
 6. UI displays valid/invalid result.
 
 ## 6. Environment Strategy
-1. Phase 1 network: Sepolia deployment.
-2. Mainnet-ready design: network config is externalized (`chainId`, `rpcUrl`, `verifierAddress`).
-3. No contract logic change needed to move from Sepolia to mainnet; only deployment/config changes.
+1. Phase 1 network: Sepolia deployment, with Anvil local profile for development/testing.
+2. Network config is externalized (`chainId`, `rpcUrl`, `verifierAddress`, `merkleRoot`) and synchronized into `modules/web/.env.local` for active mode.
+3. No contract logic change needed to move between local/sepolia/mainnet; only deployment/config changes.
 
 ## 7. Prototype-Critical Quality Gates
 1. Determinism: repeated builds with same input produce identical root.
@@ -59,5 +59,5 @@ Out of scope:
 1. TypeScript for pipeline and UI.
 2. Solidity for verifier contract.
 3. `viem` (and optional `wagmi`) for wallet/contract interaction.
-4. Sepolia RPC provider for initial deployment and verification calls.
+4. Configured RPC provider (Sepolia or local Anvil) for verification calls.
 5. Foundry for solidity development
