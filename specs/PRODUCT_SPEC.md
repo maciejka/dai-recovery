@@ -171,7 +171,10 @@ The prototype has three components:
       "totalRows": 894,
       "includedRows": 822,
       "excludedZeroAmountRows": 72,
-      "uniqueAddresses": 582
+      "uniqueAddresses": 582,
+      "synced_date": "2026-02-24 23:36:47.000 UTC",
+      "synced_hash": "0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743",
+      "synced_block_number": 24530087
     }
   }
 }

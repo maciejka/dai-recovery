@@ -16,21 +16,37 @@ function sampleRows(): RawTransferRow[] {
       sender: '0x00000000000000000000000000000000000000aa',
       amount: '10',
       tx_hash: '0x1',
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
     },
     {
       sender: '0x00000000000000000000000000000000000000bb',
       amount: '0',
       tx_hash: '0x2',
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
     },
     {
       sender: '0x00000000000000000000000000000000000000aa',
       amount: '15',
       tx_hash: '0x3',
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
     },
     {
       sender: '0x00000000000000000000000000000000000000cc',
       amount: '7',
       tx_hash: '0x4',
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
     },
   ];
 }
@@ -65,6 +81,38 @@ describe('normalizeEligibleTransfers', () => {
 });
 
 describe('aggregation and determinism', () => {
+  it('extracts synced input metadata', () => {
+    const computed = computeBuildFromPayload({
+      result: {
+        rows: sampleRows(),
+      },
+    });
+
+    expect(computed.syncedInput).toEqual({
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
+    });
+  });
+
+  it('throws when synced metadata differs between rows', () => {
+    const rows = sampleRows();
+    rows[1] = {
+      ...rows[1],
+      synced_hash:
+        '0xbe1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+    };
+
+    expect(() =>
+      computeBuildFromPayload({
+        result: {
+          rows,
+        },
+      }),
+    ).toThrow('rows[1].synced_hash must match rows[0].synced_hash');
+  });
+
   it('aggregates duplicate addresses and sorts by normalized address', () => {
     const { transfers } = normalizeEligibleTransfers(sampleRows());
     const claims = aggregateClaims(transfers);

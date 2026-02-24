@@ -10,6 +10,13 @@ export interface AccumulatorArtifact {
     amounts: string[];
     leafIndexByAddress: Record<string, number>;
   };
+  build: {
+    input: {
+      synced_date: string;
+      synced_hash: string;
+      synced_block_number: string;
+    };
+  };
 }
 
 export interface ClaimLookupResult {
@@ -22,6 +29,24 @@ export interface ClaimLookupResult {
 
 function isHex32(value: unknown): value is Hex {
   return typeof value === 'string' && /^0x[0-9a-fA-F]{64}$/u.test(value);
+}
+
+function parseNonNegativeIntegerString(
+  value: unknown,
+  fieldPath: string,
+): string {
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || !Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`${fieldPath} must be a non-negative integer`);
+    }
+    return String(value);
+  }
+
+  if (typeof value === 'string' && /^\d+$/u.test(value)) {
+    return value;
+  }
+
+  throw new Error(`${fieldPath} must be a non-negative integer`);
 }
 
 export function parseAccumulatorArtifact(
@@ -37,6 +62,13 @@ export function parseAccumulatorArtifact(
       addresses?: unknown;
       amounts?: unknown;
       leafIndexByAddress?: unknown;
+    };
+    build?: {
+      input?: {
+        synced_date?: unknown;
+        synced_hash?: unknown;
+        synced_block_number?: unknown;
+      };
     };
   };
 
@@ -63,6 +95,33 @@ export function parseAccumulatorArtifact(
   }
   if (addresses.length !== amounts.length) {
     throw new Error('Accumulator claims arrays must have matching lengths');
+  }
+  if (
+    typeof candidate.build !== 'object' ||
+    candidate.build === null ||
+    Array.isArray(candidate.build)
+  ) {
+    throw new Error('Accumulator build object is missing');
+  }
+  if (
+    typeof candidate.build.input !== 'object' ||
+    candidate.build.input === null ||
+    Array.isArray(candidate.build.input)
+  ) {
+    throw new Error('Accumulator build.input object is missing');
+  }
+
+  const { synced_date, synced_hash, synced_block_number } =
+    candidate.build.input;
+  if (typeof synced_date !== 'string' || synced_date.length === 0) {
+    throw new Error(
+      'Accumulator build.input.synced_date must be a non-empty string',
+    );
+  }
+  if (typeof synced_hash !== 'string' || synced_hash.length === 0) {
+    throw new Error(
+      'Accumulator build.input.synced_hash must be a non-empty string',
+    );
   }
 
   const normalizedTreeLevels = candidate.merkle.treeLevels.map(
@@ -111,6 +170,16 @@ export function parseAccumulatorArtifact(
       addresses: normalizedAddresses,
       amounts: normalizedAmounts,
       leafIndexByAddress: leafIndexByAddress as Record<string, number>,
+    },
+    build: {
+      input: {
+        synced_date,
+        synced_hash,
+        synced_block_number: parseNonNegativeIntegerString(
+          synced_block_number,
+          'Accumulator build.input.synced_block_number',
+        ),
+      },
     },
   };
 }

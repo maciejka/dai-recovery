@@ -16,3 +16,8 @@
 - Leaf: `keccak256(abi.encode(address,uint256))`
 - Pairing: sorted-pair hashing
 - Odd-node handling: duplicate-last
+
+## 5. Input Sync Metadata
+- Canonical input rows include `synced_date`, `synced_hash`, and `synced_block_number`.
+- Build must assert these three fields are present and identical across all rows.
+- Verified synced metadata is emitted in `accumulator.json` under `build.input`.

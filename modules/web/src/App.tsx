@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount, usePublicClient } from 'wagmi';
 import { networkConfig } from './config/network';
@@ -32,6 +32,10 @@ function formatDaiMoney(amount: bigint): string {
   const cents = roundedCents % 100n;
   const groupedWhole = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
   return `${groupedWhole}.${cents.toString().padStart(2, '0')}`;
+}
+
+function formatIntegerString(value: string): string {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
 }
 
 function sleep(ms: number): Promise<void> {
@@ -99,6 +103,12 @@ export default function App() {
 
   const artifact =
     artifactState.status === 'ready' ? artifactState.artifact : null;
+  const artifactFallbackValue =
+    artifactState.status === 'loading'
+      ? 'Loading...'
+      : artifactState.status === 'error'
+        ? `Unavailable (${artifactState.message})`
+        : 'Unavailable';
 
   useEffect(() => {
     if (!connectedAddress) {
@@ -148,38 +158,38 @@ export default function App() {
     networkConfig.merkleRoot.toLowerCase() !==
       artifact.merkle.root.toLowerCase();
 
-  async function runVerification(
-    claim: ClaimLookupResult,
-    verificationKey: string,
-  ) {
-    if (!publicClient || !artifact) {
-      return;
-    }
+  const runVerification = useCallback(
+    async (claim: ClaimLookupResult, verificationKey: string) => {
+      if (!publicClient || !artifact) {
+        return;
+      }
 
-    await sleep(SIMULATED_VERIFICATION_DELAY_MS);
+      await sleep(SIMULATED_VERIFICATION_DELAY_MS);
 
-    const result = await verifyClaimWithEthCall(
-      {
-        connectedChainId: isConnected ? connectedChainId : undefined,
-        expectedChainId: networkConfig.chainId,
-        verifierAddress: networkConfig.verifierAddress,
-        configuredMerkleRoot: networkConfig.merkleRoot,
-        artifactMerkleRoot: artifact.merkle.root,
-      },
-      {
-        account: claim.address,
-        totalAmount: claim.totalLost,
-        proof: claim.proof,
-      },
-      (params) => publicClient.readContract(params),
-    );
+      const result = await verifyClaimWithEthCall(
+        {
+          connectedChainId: isConnected ? connectedChainId : undefined,
+          expectedChainId: networkConfig.chainId,
+          verifierAddress: networkConfig.verifierAddress,
+          configuredMerkleRoot: networkConfig.merkleRoot,
+          artifactMerkleRoot: artifact.merkle.root,
+        },
+        {
+          account: claim.address,
+          totalAmount: claim.totalLost,
+          proof: claim.proof,
+        },
+        (params) => publicClient.readContract(params),
+      );
 
-    if (lastAutoVerificationKeyRef.current !== verificationKey) {
-      return;
-    }
+      if (lastAutoVerificationKeyRef.current !== verificationKey) {
+        return;
+      }
 
-    setVerificationState(result);
-  }
+      setVerificationState(result);
+    },
+    [artifact, connectedChainId, isConnected, publicClient],
+  );
 
   useEffect(() => {
     if (lookupState.status !== 'found') {
@@ -195,7 +205,7 @@ export default function App() {
 
     lastAutoVerificationKeyRef.current = autoVerificationKey;
     void runVerification(claim, autoVerificationKey);
-  }, [artifact, connectedChainId, isConnected, lookupState, publicClient]);
+  }, [connectedChainId, lookupState, runVerification]);
 
   const verificationBadge =
     verificationState === null
@@ -222,14 +232,11 @@ export default function App() {
             <article className="meta-item meta-item-group">
               <p className="meta-line">
                 <span className="label-text">Accumulator Root</span>{' '}
-                <span className="meta-inline-value" title={artifact?.merkle.root}>
-                  {artifact
-                    ? artifact.merkle.root
-                    : artifactState.status === 'loading'
-                      ? 'Loading...'
-                      : artifactState.status === 'error'
-                        ? `Unavailable (${artifactState.message})`
-                        : 'Unavailable'}
+                <span
+                  className="meta-inline-value"
+                  title={artifact?.merkle.root}
+                >
+                  {artifact ? artifact.merkle.root : artifactFallbackValue}
                 </span>
               </p>
               <p className="meta-line">
@@ -239,6 +246,21 @@ export default function App() {
                   title={networkConfig.verifierAddress ?? undefined}
                 >
                   {networkConfig.verifierAddress ?? 'Not configured'}
+                </span>
+              </p>
+              <p className="meta-line">
+                <span className="label-text">Synced up to</span>{' '}
+                <span
+                  className="meta-inline-value"
+                  title={
+                    artifact
+                      ? `Block ${artifact.build.input.synced_block_number} - ${artifact.build.input.synced_date}`
+                      : undefined
+                  }
+                >
+                  {artifact
+                    ? `Block ${formatIntegerString(artifact.build.input.synced_block_number)} - ${artifact.build.input.synced_date}`
+                    : artifactFallbackValue}
                 </span>
               </p>
             </article>
@@ -288,7 +310,9 @@ export default function App() {
             <div className="result-list">
               <p className="result-row">
                 <span className="label-text">Total Lost (DAI)</span>
-                <span className="row-value">{formatDaiMoney(lookupState.claim.totalLost)}</span>
+                <span className="row-value">
+                  {formatDaiMoney(lookupState.claim.totalLost)}
+                </span>
               </p>
               <p className="result-row">
                 <span className="label-text">Verification</span>

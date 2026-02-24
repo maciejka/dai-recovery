@@ -23,6 +23,9 @@ export interface RawTransferRow {
   amount: unknown;
   tx_hash?: unknown;
   date?: unknown;
+  synced_date?: unknown;
+  synced_hash?: unknown;
+  synced_block_number?: unknown;
   [key: string]: unknown;
 }
 
@@ -57,6 +60,13 @@ export interface ComputedBuild {
   claims: ClaimEntry[];
   merkle: MerkleData;
   stats: BuildStats;
+  syncedInput: SyncedInputMetadata;
+}
+
+export interface SyncedInputMetadata {
+  synced_date: string;
+  synced_hash: string;
+  synced_block_number: number;
 }
 
 export interface BuildArtifactsOptions {
@@ -173,6 +183,76 @@ export function normalizeEligibleTransfers(rows: RawTransferRow[]): {
       excludedZeroAmountRows,
     },
   };
+}
+
+function parseSyncedInputMetadata(
+  row: RawTransferRow,
+  rowIndex: number,
+): SyncedInputMetadata {
+  const dateFieldPath = `rows[${rowIndex}].synced_date`;
+  invariant(
+    typeof row.synced_date === 'string' && row.synced_date.length > 0,
+    `${dateFieldPath} must be a non-empty string`,
+  );
+
+  const hashFieldPath = `rows[${rowIndex}].synced_hash`;
+  invariant(
+    typeof row.synced_hash === 'string' && row.synced_hash.length > 0,
+    `${hashFieldPath} must be a non-empty string`,
+  );
+
+  const blockFieldPath = `rows[${rowIndex}].synced_block_number`;
+  const syncedBlockNumber = parseNonNegativeInteger(
+    row.synced_block_number,
+    blockFieldPath,
+  );
+  invariant(
+    syncedBlockNumber <= BigInt(Number.MAX_SAFE_INTEGER),
+    `${blockFieldPath} number is not safe`,
+  );
+
+  return {
+    synced_date: row.synced_date,
+    synced_hash: row.synced_hash,
+    synced_block_number: Number(syncedBlockNumber),
+  };
+}
+
+export function extractSyncedInputMetadata(
+  rows: RawTransferRow[],
+): SyncedInputMetadata {
+  invariant(rows.length > 0, 'Input JSON result.rows array must not be empty');
+
+  const firstRow = rows[0];
+  invariant(
+    typeof firstRow === 'object' && firstRow !== null,
+    'rows[0] must be an object',
+  );
+  const expected = parseSyncedInputMetadata(firstRow, 0);
+
+  for (let index = 1; index < rows.length; index += 1) {
+    const row = rows[index];
+    invariant(
+      typeof row === 'object' && row !== null,
+      `rows[${index}] must be an object`,
+    );
+    const current = parseSyncedInputMetadata(row, index);
+
+    invariant(
+      current.synced_date === expected.synced_date,
+      `rows[${index}].synced_date must match rows[0].synced_date`,
+    );
+    invariant(
+      current.synced_hash === expected.synced_hash,
+      `rows[${index}].synced_hash must match rows[0].synced_hash`,
+    );
+    invariant(
+      current.synced_block_number === expected.synced_block_number,
+      `rows[${index}].synced_block_number must match rows[0].synced_block_number`,
+    );
+  }
+
+  return expected;
 }
 
 export function aggregateClaims(transfers: EligibleTransfer[]): ClaimEntry[] {
@@ -298,6 +378,7 @@ export function createMerkleData(claims: ClaimEntry[]): MerkleData {
 
 export function computeBuildFromPayload(payload: unknown): ComputedBuild {
   const rows = extractRows(payload);
+  const syncedInput = extractSyncedInputMetadata(rows);
   const normalized = normalizeEligibleTransfers(rows);
   const claims = aggregateClaims(normalized.transfers);
   const merkle = createMerkleData(claims);
@@ -309,6 +390,7 @@ export function computeBuildFromPayload(payload: unknown): ComputedBuild {
       ...normalized.stats,
       uniqueAddresses: claims.length,
     },
+    syncedInput,
   };
 }
 
@@ -380,6 +462,9 @@ export async function buildAndWriteArtifacts(
         includedRows: computed.stats.includedRows,
         excludedZeroAmountRows: computed.stats.excludedZeroAmountRows,
         uniqueAddresses: computed.stats.uniqueAddresses,
+        synced_date: computed.syncedInput.synced_date,
+        synced_hash: computed.syncedInput.synced_hash,
+        synced_block_number: computed.syncedInput.synced_block_number,
       },
     },
   };

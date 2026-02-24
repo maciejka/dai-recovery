@@ -34,6 +34,14 @@ const fixture = parseAccumulatorArtifact({
       '0x00000000000000000000000000000000000000cc': 2,
     },
   },
+  build: {
+    input: {
+      synced_date: '2026-02-24 23:36:47.000 UTC',
+      synced_hash:
+        '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
+      synced_block_number: 24530087,
+    },
+  },
 });
 
 describe('deriveProof', () => {
@@ -69,5 +77,20 @@ describe('lookupClaim', () => {
     );
 
     expect(claim).toBeNull();
+  });
+});
+
+describe('parseAccumulatorArtifact', () => {
+  it('normalizes synced_block_number to an integer string', () => {
+    expect(fixture.build.input.synced_block_number).toBe('24530087');
+  });
+
+  it('throws when build input synced metadata is missing', () => {
+    expect(() =>
+      parseAccumulatorArtifact({
+        merkle: fixture.merkle,
+        claims: fixture.claims,
+      }),
+    ).toThrow('Accumulator build object is missing');
   });
 });
