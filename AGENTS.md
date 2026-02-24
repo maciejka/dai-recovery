@@ -21,10 +21,11 @@ Do not duplicate product or architecture rules in code comments or PR descriptio
 - `bun run contracts:test`: run Solidity tests.
 - `bun run contracts:deploy:local`: deploy verifier to local testnet (Anvil defaults; supports `LOCAL_RPC_URL`, `MERKLE_ROOT`, `PRIVATE_KEY` overrides).
 - `bun run contracts:deploy:sepolia`: deploy verifier using Foundry (requires `MERKLE_ROOT`, `SEPOLIA_RPC_URL`, and `PRIVATE_KEY`).
-- `bun run contracts:local:up`: start Anvil (or reuse running local RPC), deploy verifier, and keep local node running.
+- `bun run contracts:local:up`: start Anvil (or reuse running local RPC) and keep local node running.
 - `bun run contracts:local:down`: stop Anvil started by `contracts:local:up`.
 - `bun run ui:typecheck`: run frontend TypeScript checks.
 - `bun run ui:test`: run frontend tests.
+- `bun run ui:build:local`: build frontend against local deployment config from Foundry `run-latest.json` and `data/accumulator.json`.
 - `bun run ui:build`: build the frontend artifact.
 - `bun run format`: apply Biome formatting to source and config files.
 - `bun run format:check`: verify formatting without writing changes.

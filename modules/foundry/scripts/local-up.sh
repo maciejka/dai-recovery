@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 ANVIL_HOST="${ANVIL_HOST:-127.0.0.1}"
 ANVIL_PORT="${ANVIL_PORT:-8545}"
 ANVIL_CHAIN_ID="${ANVIL_CHAIN_ID:-31337}"
 LOCAL_RPC_URL="${LOCAL_RPC_URL:-http://${ANVIL_HOST}:${ANVIL_PORT}}"
 ANVIL_START_TIMEOUT_SECONDS="${ANVIL_START_TIMEOUT_SECONDS:-15}"
 ANVIL_PID_FILE="${ANVIL_PID_FILE:-/tmp/dai-recovery-anvil.pid}"
+ANVIL_LOG_FILE="${ANVIL_LOG_FILE:-/tmp/dai-recovery-anvil.log}"
+STARTED_ANVIL=0
+ANVIL_PID=""
+SCRIPT_SUCCEEDED=0
 
 if ! command -v anvil >/dev/null 2>&1; then
   echo "'anvil' is required for contracts:local:up. Install Foundry first."
@@ -23,26 +26,33 @@ json_rpc_ping() {
 
 if json_rpc_ping; then
   echo "Anvil RPC already reachable at $LOCAL_RPC_URL."
-  echo "Reusing existing node and deploying verifier..."
-  LOCAL_RPC_URL="$LOCAL_RPC_URL" bash "$ROOT_DIR/modules/foundry/scripts/deploy-local.sh"
-  echo "Deployment complete against existing local node."
+  echo "Reusing existing node."
+  echo "Run 'bun run contracts:deploy:local' to deploy verifier."
+  SCRIPT_SUCCEEDED=1
   exit 0
 fi
 
-ANVIL_LOG_FILE="$(mktemp -t dai-recovery-anvil.XXXXXX.log)"
-anvil --host "$ANVIL_HOST" --port "$ANVIL_PORT" --chain-id "$ANVIL_CHAIN_ID" >"$ANVIL_LOG_FILE" 2>&1 &
-ANVIL_PID=$!
-echo "$ANVIL_PID" >"$ANVIL_PID_FILE"
+cleanup_on_error() {
+  if [[ "$SCRIPT_SUCCEEDED" -eq 1 ]]; then
+    return
+  fi
 
-cleanup() {
-  if kill -0 "$ANVIL_PID" >/dev/null 2>&1; then
+  if [[ "$STARTED_ANVIL" -eq 1 && -n "$ANVIL_PID" ]] && kill -0 "$ANVIL_PID" >/dev/null 2>&1; then
     kill "$ANVIL_PID" >/dev/null 2>&1 || true
     wait "$ANVIL_PID" 2>/dev/null || true
   fi
-  rm -f "$ANVIL_PID_FILE"
+
+  if [[ "$STARTED_ANVIL" -eq 1 ]]; then
+    rm -f "$ANVIL_PID_FILE"
+  fi
 }
 
-trap cleanup EXIT INT TERM
+trap cleanup_on_error EXIT INT TERM
+
+nohup anvil --host "$ANVIL_HOST" --port "$ANVIL_PORT" --chain-id "$ANVIL_CHAIN_ID" >"$ANVIL_LOG_FILE" 2>&1 &
+ANVIL_PID=$!
+STARTED_ANVIL=1
+echo "$ANVIL_PID" >"$ANVIL_PID_FILE"
 
 max_attempts=$((ANVIL_START_TIMEOUT_SECONDS * 4))
 for _ in $(seq 1 "$max_attempts"); do
@@ -67,8 +77,9 @@ if ! json_rpc_ping; then
 fi
 
 echo "Anvil started at $LOCAL_RPC_URL (chain id: $ANVIL_CHAIN_ID)"
-LOCAL_RPC_URL="$LOCAL_RPC_URL" bash "$ROOT_DIR/modules/foundry/scripts/deploy-local.sh"
-
 echo "Local node is running."
-echo "Press Ctrl+C to stop Anvil."
-wait "$ANVIL_PID"
+echo "Anvil PID: $ANVIL_PID"
+echo "Anvil logs: $ANVIL_LOG_FILE"
+echo "Run 'bun run contracts:deploy:local' to deploy verifier."
+echo "Run 'bun run contracts:local:down' to stop it."
+SCRIPT_SUCCEEDED=1
