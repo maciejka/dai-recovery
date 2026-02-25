@@ -218,7 +218,7 @@ export default function App() {
     networkConfig.chain.blockExplorers?.default?.url;
   const verifierExplorerUrl =
     networkConfig.verifierAddress && verifierExplorerBaseUrl
-      ? `${verifierExplorerBaseUrl.replace(/\/$/u, '')}/address/${networkConfig.verifierAddress}`
+      ? `${verifierExplorerBaseUrl.replace(/\/$/u, '')}/address/${networkConfig.verifierAddress}#code`
       : null;
 
   return (
