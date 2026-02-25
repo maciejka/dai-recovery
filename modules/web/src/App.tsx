@@ -35,6 +35,11 @@ function formatDaiAmount(amount: bigint): string {
   return fraction.length > 0 ? `${groupedWhole}.${fraction}` : groupedWhole;
 }
 
+function formatRoundedUpWholeDai(amount: bigint): string {
+  const roundedUpWhole = (amount + WEI_PER_DAI - 1n) / WEI_PER_DAI;
+  return roundedUpWhole.toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
+}
+
 function formatIntegerString(value: string): string {
   return value.replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
 }
@@ -247,6 +252,19 @@ export default function App() {
                   title={networkConfig.verifierAddress ?? undefined}
                 >
                   {networkConfig.verifierAddress ?? 'Not configured'}
+                </span>
+              </p>
+              <p className="meta-line">
+                <span className="label-text">Total Amount (DAI)</span>{' '}
+                <span
+                  className="meta-inline-value"
+                  title={artifact?.build.input.totalAmount}
+                >
+                  {artifact
+                    ? formatRoundedUpWholeDai(
+                        BigInt(artifact.build.input.totalAmount),
+                      )
+                    : artifactFallbackValue}
                 </span>
               </p>
               <p className="meta-line">

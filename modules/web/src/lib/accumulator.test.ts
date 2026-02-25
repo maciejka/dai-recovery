@@ -36,6 +36,7 @@ const fixture = parseAccumulatorArtifact({
   },
   build: {
     input: {
+      totalAmount: '60',
       synced_date: '2026-02-24 23:36:47.000 UTC',
       synced_hash:
         '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
@@ -81,6 +82,10 @@ describe('lookupClaim', () => {
 });
 
 describe('parseAccumulatorArtifact', () => {
+  it('parses totalAmount as an integer string', () => {
+    expect(fixture.build.input.totalAmount).toBe('60');
+  });
+
   it('normalizes synced_block_number to an integer string', () => {
     expect(fixture.build.input.synced_block_number).toBe('24530087');
   });

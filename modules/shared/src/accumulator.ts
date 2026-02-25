@@ -61,6 +61,7 @@ export interface ComputedBuild {
   merkle: MerkleData;
   stats: BuildStats;
   syncedInput: SyncedInputMetadata;
+  totalAmount: bigint;
 }
 
 export interface SyncedInputMetadata {
@@ -382,6 +383,7 @@ export function computeBuildFromPayload(payload: unknown): ComputedBuild {
   const normalized = normalizeEligibleTransfers(rows);
   const claims = aggregateClaims(normalized.transfers);
   const merkle = createMerkleData(claims);
+  const totalAmount = claims.reduce((sum, claim) => sum + claim.totalLost, 0n);
 
   return {
     claims,
@@ -391,6 +393,7 @@ export function computeBuildFromPayload(payload: unknown): ComputedBuild {
       uniqueAddresses: claims.length,
     },
     syncedInput,
+    totalAmount,
   };
 }
 
@@ -462,6 +465,7 @@ export async function buildAndWriteArtifacts(
         includedRows: computed.stats.includedRows,
         excludedZeroAmountRows: computed.stats.excludedZeroAmountRows,
         uniqueAddresses: computed.stats.uniqueAddresses,
+        totalAmount: computed.totalAmount.toString(),
         synced_date: computed.syncedInput.synced_date,
         synced_hash: computed.syncedInput.synced_hash,
         synced_block_number: computed.syncedInput.synced_block_number,

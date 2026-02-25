@@ -12,6 +12,7 @@ export interface AccumulatorArtifact {
   };
   build: {
     input: {
+      totalAmount: string;
       synced_date: string;
       synced_hash: string;
       synced_block_number: string;
@@ -65,6 +66,7 @@ export function parseAccumulatorArtifact(
     };
     build?: {
       input?: {
+        totalAmount?: unknown;
         synced_date?: unknown;
         synced_hash?: unknown;
         synced_block_number?: unknown;
@@ -111,8 +113,12 @@ export function parseAccumulatorArtifact(
     throw new Error('Accumulator build.input object is missing');
   }
 
-  const { synced_date, synced_hash, synced_block_number } =
+  const { totalAmount, synced_date, synced_hash, synced_block_number } =
     candidate.build.input;
+  const normalizedTotalAmount = parseNonNegativeIntegerString(
+    totalAmount,
+    'Accumulator build.input.totalAmount',
+  );
   if (typeof synced_date !== 'string' || synced_date.length === 0) {
     throw new Error(
       'Accumulator build.input.synced_date must be a non-empty string',
@@ -173,6 +179,7 @@ export function parseAccumulatorArtifact(
     },
     build: {
       input: {
+        totalAmount: normalizedTotalAmount,
         synced_date,
         synced_hash,
         synced_block_number: parseNonNegativeIntegerString(

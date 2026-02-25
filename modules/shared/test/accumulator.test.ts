@@ -94,6 +94,7 @@ describe('aggregation and determinism', () => {
         '0xae1314bfc77dfce83bcf5f66d85c9b55adf936d00f726d71f55c5c81b3ebb743',
       synced_block_number: 24530087,
     });
+    expect(computed.totalAmount).toBe(32n);
   });
 
   it('throws when synced metadata differs between rows', () => {
