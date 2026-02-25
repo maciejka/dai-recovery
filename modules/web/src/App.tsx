@@ -226,139 +226,167 @@ export default function App() {
     <main className="app-shell">
       <div className="background-gradient" />
       <section className="panel">
-        <header className="panel-header">
-          <div className="header-top">
-            <h1>Dai Recovery</h1>
-            <div className="header-actions">
-              <ConnectKitButton showBalance={false} />
-            </div>
-          </div>
-
-          <div className="meta-grid">
-            <article className="meta-item meta-item-group">
-              <p className="meta-line">
-                <span className="label-text">Accumulator Root</span>{' '}
-                <span
-                  className="meta-inline-value"
-                  title={artifact?.merkle.root}
-                >
-                  {artifact ? artifact.merkle.root : artifactFallbackValue}
-                </span>
-              </p>
-              <p className="meta-line">
-                <span className="label-text">Verifier Address</span>{' '}
-                <span
-                  className="meta-inline-value"
-                  title={networkConfig.verifierAddress ?? undefined}
-                >
-                  {networkConfig.verifierAddress ?? 'Not configured'}
-                </span>
-              </p>
-              <p className="meta-line">
-                <span className="label-text">Total Amount (DAI)</span>{' '}
-                <span
-                  className="meta-inline-value"
-                  title={artifact?.build.input.totalAmount}
-                >
-                  {artifact
-                    ? formatRoundedUpWholeDai(
-                        BigInt(artifact.build.input.totalAmount),
-                      )
-                    : artifactFallbackValue}
-                </span>
-              </p>
-              <p className="meta-line">
-                <span className="label-text">Synced up to</span>{' '}
-                <span
-                  className="meta-inline-value"
-                  title={
-                    artifact
-                      ? `Block ${artifact.build.input.synced_block_number} - ${artifact.build.input.synced_date}`
-                      : undefined
-                  }
-                >
-                  {artifact
-                    ? `Block ${formatIntegerString(artifact.build.input.synced_block_number)} - ${artifact.build.input.synced_date}`
-                    : artifactFallbackValue}
-                </span>
-              </p>
-            </article>
-          </div>
+        <header className="panel-header panel-header-hero">
+          <h1>Dai Recovery</h1>
         </header>
 
-        <section className="result-card">
-          <div className="result-controls">
-            <div className="address-row">
-              <label className="label-text" htmlFor="wallet-address">
-                Address
-              </label>
-              <input
-                className="address-input"
-                id="wallet-address"
-                value={addressInput}
-                onChange={(event) => setAddressInput(event.target.value)}
-                placeholder="0x..."
-                autoComplete="off"
-              />
-            </div>
-          </div>
-
-          {artifactState.status === 'loading' && (
-            <p className="result-message">Loading accumulator dataset...</p>
-          )}
-          {artifactState.status === 'error' && (
-            <p className="result-message error-line">
-              Dataset error: {artifactState.message}
+        <section className="general-info">
+          <article className="meta-item meta-item-group">
+            <p className="meta-line">
+              <span className="label-text">Accumulator Root</span>{' '}
+              <span className="meta-inline-value" title={artifact?.merkle.root}>
+                {artifact ? artifact.merkle.root : artifactFallbackValue}
+              </span>
             </p>
-          )}
-
-          {configuredRootMismatch && (
-            <p className="result-message error-line">
-              Config root mismatch: `VITE_MERKLE_ROOT` does not match the loaded
-              accumulator.
+            <p className="meta-line">
+              <span className="label-text">Verifier Address</span>{' '}
+              <span
+                className="meta-inline-value"
+                title={networkConfig.verifierAddress ?? undefined}
+              >
+                {networkConfig.verifierAddress ?? 'Not configured'}
+              </span>
             </p>
-          )}
-
-          {lookupState.status === 'idle' && (
-            <p className="result-message">
-              Enter an address to check lost dai claim.
+            <p className="meta-line">
+              <span className="label-text">Total Amount (DAI)</span>{' '}
+              <span
+                className="meta-inline-value"
+                title={artifact?.build.input.totalAmount}
+              >
+                {artifact
+                  ? formatRoundedUpWholeDai(
+                      BigInt(artifact.build.input.totalAmount),
+                    )
+                  : artifactFallbackValue}
+              </span>
             </p>
-          )}
+            <p className="meta-line">
+              <span className="label-text">Synced up to</span>{' '}
+              <span
+                className="meta-inline-value"
+                title={
+                  artifact
+                    ? `Block ${artifact.build.input.synced_block_number} - ${artifact.build.input.synced_date}`
+                    : undefined
+                }
+              >
+                {artifact
+                  ? `Block ${formatIntegerString(artifact.build.input.synced_block_number)} - ${artifact.build.input.synced_date}`
+                  : artifactFallbackValue}
+              </span>
+            </p>
+          </article>
+        </section>
 
-          {lookupState.status === 'found' && (
-            <div className="result-list">
-              <p className="result-row">
-                <span className="label-text">Total Lost (DAI)</span>
-                <span className="row-value">
-                  {formatDaiAmount(lookupState.claim.totalLost)}
-                </span>
+        <div className="content-grid">
+          <section className="info-column">
+            <article className="narrative-card">
+              <h2 className="narrative-title">What This Is</h2>
+              <p className="narrative-text">
+                This tool verifies whether an address is included in the DAI
+                loss recovery dataset. The dataset aggregates mistaken DAI
+                transfers by sender address and commits them into a
+                deterministic Merkle accumulator root. Your address is checked
+                locally and then confirmed with an onchain `eth_call` against
+                the deployed verifier contract.
               </p>
-              <p className="result-row">
-                <span className="label-text">Verification</span>
-                <span className={verificationBadge.className}>
-                  {verificationBadge.text}
-                </span>
+              <p className="narrative-text">
+                This page is a proof-verification interface only. It does not
+                move funds, execute claims, or request approvals. The right-hand
+                form checks whether an address maps to a valid tuple (`address`,
+                `total amount`, `proof`) under the current accumulator root.
               </p>
-              {verificationState?.status === 'error' && (
+              <p className="narrative-text">
+                If an address is included, the UI shows the exact recorded loss
+                amount and whether onchain verification succeeds against the
+                configured verifier contract. If it is not included, the UI
+                reports that no dataset entry exists for that address.
+              </p>
+            </article>
+          </section>
+
+          <section className="form-column">
+            <section className="result-card check-section">
+              <div className="check-section-header">
+                <h2>Check Your Address</h2>
+                <div className="header-actions">
+                  <ConnectKitButton showBalance={false} />
+                </div>
+              </div>
+              <div className="result-controls">
+                <div className="address-row">
+                  <label className="label-text" htmlFor="wallet-address">
+                    Address
+                  </label>
+                  <input
+                    className="address-input"
+                    id="wallet-address"
+                    value={addressInput}
+                    onChange={(event) => setAddressInput(event.target.value)}
+                    placeholder="0x..."
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+
+              {artifactState.status === 'loading' && (
+                <p className="result-message">Loading accumulator dataset...</p>
+              )}
+              {artifactState.status === 'error' && (
                 <p className="result-message error-line">
-                  Verification failed: {verificationState.message}
+                  Dataset error: {artifactState.message}
                 </p>
               )}
-            </div>
-          )}
 
-          {lookupState.status === 'not_found' && (
-            <p className="result-message error-line">
-              No dataset entry for {lookupState.address}.
-            </p>
-          )}
+              {configuredRootMismatch && (
+                <p className="result-message error-line">
+                  Config root mismatch: `VITE_MERKLE_ROOT` does not match the
+                  loaded accumulator.
+                </p>
+              )}
 
-          {lookupState.status === 'error' && (
-            <p className="result-message error-line">
-              Lookup error: {lookupState.message}
-            </p>
-          )}
-        </section>
+              {lookupState.status === 'idle' && (
+                <p className="result-message">
+                  Enter an address to check lost dai claim.
+                </p>
+              )}
+
+              {lookupState.status === 'found' && (
+                <div className="result-list">
+                  <p className="result-row">
+                    <span className="label-text">Total Lost (DAI)</span>
+                    <span className="row-value">
+                      {formatDaiAmount(lookupState.claim.totalLost)}
+                    </span>
+                  </p>
+                  <p className="result-row">
+                    <span className="label-text">Verification</span>
+                    <span className={verificationBadge.className}>
+                      {verificationBadge.text}
+                    </span>
+                  </p>
+                  {verificationState?.status === 'error' && (
+                    <p className="result-message error-line">
+                      Verification failed: {verificationState.message}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {lookupState.status === 'not_found' && (
+                <p className="result-message error-line">
+                  No dataset entry for {lookupState.address}.
+                </p>
+              )}
+
+              {lookupState.status === 'error' && (
+                <p className="result-message error-line">
+                  Lookup error: {lookupState.message}
+                </p>
+              )}
+            </section>
+          </section>
+        </div>
       </section>
     </main>
   );
