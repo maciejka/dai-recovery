@@ -22,16 +22,17 @@ type LookupState =
   | { status: 'not_found'; address: string }
   | { status: 'error'; message: string };
 
-const WEI_PER_CENT = 10n ** 16n;
-const HALF_CENT_IN_WEI = 5n * 10n ** 15n;
+const WEI_PER_DAI = 10n ** 18n;
 const SIMULATED_VERIFICATION_DELAY_MS = 1200;
 
-function formatDaiMoney(amount: bigint): string {
-  const roundedCents = (amount + HALF_CENT_IN_WEI) / WEI_PER_CENT;
-  const whole = roundedCents / 100n;
-  const cents = roundedCents % 100n;
+function formatDaiAmount(amount: bigint): string {
+  const whole = amount / WEI_PER_DAI;
+  const fraction = (amount % WEI_PER_DAI)
+    .toString()
+    .padStart(18, '0')
+    .replace(/0+$/u, '');
   const groupedWhole = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
-  return `${groupedWhole}.${cents.toString().padStart(2, '0')}`;
+  return fraction.length > 0 ? `${groupedWhole}.${fraction}` : groupedWhole;
 }
 
 function formatIntegerString(value: string): string {
@@ -311,7 +312,7 @@ export default function App() {
               <p className="result-row">
                 <span className="label-text">Total Lost (DAI)</span>
                 <span className="row-value">
-                  {formatDaiMoney(lookupState.claim.totalLost)}
+                  {formatDaiAmount(lookupState.claim.totalLost)}
                 </span>
               </p>
               <p className="result-row">
