@@ -74,7 +74,9 @@ export default function App() {
 
     async function loadArtifact() {
       try {
-        const response = await fetch('/accumulator.json');
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}accumulator.json`,
+        );
         if (!response.ok) {
           throw new Error(
             `Failed to load accumulator.json (${response.status})`,
