@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install web dependencies
+        run: bun install --frozen-lockfile --cwd modules/web
+
       - name: Ensure Sepolia env is configured
         run: bun run ui:env:sepolia
 
