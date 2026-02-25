@@ -214,6 +214,12 @@ export default function App() {
         : verificationState.status === 'invalid'
           ? { text: 'Invalid', className: 'badge badge-invalid' }
           : { text: 'Error', className: 'badge badge-invalid' };
+  const verifierExplorerBaseUrl =
+    networkConfig.chain.blockExplorers?.default?.url;
+  const verifierExplorerUrl =
+    networkConfig.verifierAddress && verifierExplorerBaseUrl
+      ? `${verifierExplorerBaseUrl.replace(/\/$/u, '')}/address/${networkConfig.verifierAddress}`
+      : null;
 
   return (
     <main className="app-shell">
@@ -237,7 +243,18 @@ export default function App() {
                 className="meta-inline-value"
                 title={networkConfig.verifierAddress ?? undefined}
               >
-                {networkConfig.verifierAddress ?? 'Not configured'}
+                {networkConfig.verifierAddress && verifierExplorerUrl ? (
+                  <a
+                    className="meta-inline-link"
+                    href={verifierExplorerUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {networkConfig.verifierAddress}
+                  </a>
+                ) : (
+                  networkConfig.verifierAddress ?? 'Not configured'
+                )}
               </span>
             </p>
             <p className="meta-line">

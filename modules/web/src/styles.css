@@ -222,6 +222,16 @@ body {
   color: var(--ink-900);
 }
 
+.meta-inline-link {
+  color: inherit;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(16, 46, 56, 0.35);
+}
+
+.meta-inline-link:hover {
+  text-decoration-color: rgba(16, 46, 56, 0.7);
+}
+
 .address-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
