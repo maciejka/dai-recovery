@@ -24,13 +24,13 @@ Do not duplicate product or architecture rules in code comments or PR descriptio
 - `bun run contracts:local:up`: start Anvil (or reuse running local RPC) and keep local node running.
 - `bun run contracts:local:down`: stop Anvil started by `contracts:local:up`.
 - `bun run ui:env:anvil`: generate `modules/web/.env.local` from Foundry `run-latest.json` and `data/accumulator.json`.
-- `bun run ui:env:sepolia`: copy `modules/web/.env.sepolia` into `modules/web/.env.local`.
+- `bun run ui:env:sepolia`: validate that `modules/web/.env.sepolia` exists (Sepolia mode reads it directly).
 - `bun run ui:typecheck`: run frontend TypeScript checks.
 - `bun run ui:test`: run frontend tests.
-- `bun run ui:dev`: run frontend dev server in `sepolia` mode (refreshes `modules/web/.env.local` first).
+- `bun run ui:dev`: run frontend dev server in `sepolia` mode (reads `modules/web/.env.sepolia`).
 - `bun run ui:dev:local`: run frontend dev server in `anvil` mode (auto-generates `modules/web/.env.local`).
 - `bun run ui:build:local`: build frontend in `anvil` mode (auto-generates `modules/web/.env.local`).
-- `bun run ui:build`: build the frontend artifact in `sepolia` mode (refreshes `modules/web/.env.local` first).
+- `bun run ui:build`: build the frontend artifact in `sepolia` mode (reads `modules/web/.env.sepolia`).
 - `bun run format`: apply Biome formatting to source and config files.
 - `bun run format:check`: verify formatting without writing changes.
 - `bun run lint`: run Biome lint checks on `modules/accumulator`, `modules/shared`, and `modules/web`.

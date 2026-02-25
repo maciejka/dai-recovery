@@ -1,4 +1,4 @@
-import { copyFile, readFile, writeFile } from 'node:fs/promises';
+import { access, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,8 +17,8 @@ const deployRunPath = resolve(
   '31337',
   'run-latest.json',
 );
-const sepoliaEnvPath = resolve(rootDir, 'modules', 'web', '.env.sepolia');
 const envOutputPath = resolve(rootDir, 'modules', 'web', '.env.local');
+const sepoliaEnvPath = resolve(rootDir, 'modules', 'web', '.env.sepolia');
 
 const DEFAULT_LOCAL_CHAIN_ID = '31337';
 const DEFAULT_LOCAL_RPC_URL = 'http://127.0.0.1:8545';
@@ -55,11 +55,13 @@ async function readJson(path) {
 
 async function syncSepoliaEnv() {
   try {
-    await copyFile(sepoliaEnvPath, envOutputPath);
+    await access(sepoliaEnvPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    fail(`Failed to copy ${sepoliaEnvPath} to ${envOutputPath}: ${message}`);
+    fail(`Failed to access ${sepoliaEnvPath}: ${message}`);
   }
+
+  console.log(`Sepolia mode reads ${sepoliaEnvPath} directly`);
 }
 
 async function syncAnvilEnv() {
@@ -107,7 +109,9 @@ async function main() {
     await syncAnvilEnv();
   }
 
-  console.log(`Wrote ${envOutputPath} (${profile})`);
+  if (profile === 'anvil') {
+    console.log(`Wrote ${envOutputPath} (${profile})`);
+  }
 }
 
 await main();
