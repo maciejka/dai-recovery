@@ -46,7 +46,9 @@ Out of scope:
 
 ## 6. Environment Strategy
 1. Phase 1 network: Sepolia deployment, with Anvil local profile for development/testing.
-2. Network config is externalized (`chainId`, `rpcUrl`, `verifierAddress`, `merkleRoot`) and synchronized into `modules/web/.env.local` for active mode.
+2. Network config is externalized (`chainId`, `rpcUrl`, `verifierAddress`, `merkleRoot`) with profile-specific env handling:
+   - Sepolia mode reads `modules/web/.env.sepolia` directly.
+   - Anvil mode generates `modules/web/.env.local` from local deploy artifacts.
 3. No contract logic change needed to move between local/sepolia/mainnet; only deployment/config changes.
 
 ## 7. Prototype-Critical Quality Gates

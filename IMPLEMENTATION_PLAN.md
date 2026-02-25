@@ -53,7 +53,7 @@ Exit criteria:
 Exit criteria:
 - Artifacts generated from `data/transfers.json`
 - Determinism test passes
-- `accumulator.json` committed
+- `accumulator.json` reproducibly generated from committed input + scripts
 
 ## 4. Workstream B - Solidity Verifier (M3)
 ### Implementation

@@ -23,7 +23,6 @@ type LookupState =
   | { status: 'error'; message: string };
 
 const WEI_PER_DAI = 10n ** 18n;
-const SIMULATED_VERIFICATION_DELAY_MS = 1200;
 
 function formatDaiAmount(amount: bigint): string {
   const whole = amount / WEI_PER_DAI;
@@ -42,12 +41,6 @@ function formatRoundedUpWholeDai(amount: bigint): string {
 
 function formatIntegerString(value: string): string {
   return value.replace(/\B(?=(\d{3})+(?!\d))/gu, ',');
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 }
 
 export default function App() {
@@ -171,8 +164,6 @@ export default function App() {
       if (!publicClient || !artifact) {
         return;
       }
-
-      await sleep(SIMULATED_VERIFICATION_DELAY_MS);
 
       const result = await verifyClaimWithEthCall(
         {
