@@ -20,6 +20,44 @@ bun install --frozen-lockfile --cwd modules/web
 
 Contributor-oriented project structure, command catalog, and pre-PR checks are documented in `AGENTS.md`.
 
+## Accumulator Construction and Verification
+
+This section describes how the accumulator is built and how proofs are checked.
+
+Construction pipeline (`bun run build:merkle`):
+1. Query transfer rows in Dune using `data/transafers.sql`, then export that query result to `data/transfers.json`.
+2. Load `data/transfers.json` and read `result.rows`.
+3. Validate every row (`sender` must be a valid address, `amount` must be a non-negative integer).
+4. Filter out rows with `amount = 0`.
+5. Require `synced_date`, `synced_hash`, and `synced_block_number` to match across all rows.
+6. Aggregate repeated addresses into one `totalLost` value per address.
+7. Normalize addresses and sort claims lexicographically for stable ordering.
+8. Build leaf hashes as `keccak256(abi.encode(address, uint256))`.
+9. Build parent nodes using sorted-pair hashing (`keccak256(abi.encodePacked(min(a,b), max(a,b)))`), duplicating the last node on odd-width levels.
+10. Write `data/accumulator.json` with:
+   - `merkle.root` and full `merkle.treeLevels`
+   - `claims.addresses`, `claims.amounts`, and `claims.leafIndexByAddress`
+   - Build provenance (`input sha256`, row counters, `totalAmount`, `synced_*` fields, runtime info)
+
+How that artifact is used:
+- Deployment injects `merkle.root` into `RecoveryVerifier` constructor as immutable `merkleRoot`.
+- The UI loads `accumulator.json`, maps a wallet address to its leaf index, derives its Merkle proof from `treeLevels`, and calls `verify(account, totalAmount, proof)`.
+- The contract recomputes `leaf = keccak256(abi.encode(account, totalAmount))`, processes the sorted proof, and returns `true` only when the result equals the stored root.
+- The UI also rejects verification when configured root and artifact root differ.
+
+How lost amounts are verified for a wallet:
+1. The app normalizes an address and looks it up in `claims.leafIndexByAddress`.
+2. If an index exists, the app reads `claims.amounts[index]` as the wallet's aggregated lost amount.
+3. The app derives the Merkle proof from `merkle.treeLevels` and that index.
+4. The app calls `RecoveryVerifier.verify(address, aggregatedAmount, proof)`.
+5. `true` means that exact `(address, aggregatedAmount)` tuple is included under the deployed root; `false` means it is not.
+
+Implementation and test anchors:
+- Shared deterministic builder: `modules/shared/src/accumulator.ts`
+- Onchain verifier: `modules/foundry/RecoveryVerifier.sol`
+- Determinism/proof tests: `modules/shared/test/accumulator.test.ts`
+- Solidity proof-vector tests: `modules/foundry/RecoveryVerifier.t.sol`
+
 ## Local End-to-End
 
 ```bash
