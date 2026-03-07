@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bun:
+    name: Bun Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install web dependencies
+        run: bun install --frozen-lockfile --cwd modules/web
+
+      - name: Ensure Sepolia env is configured
+        run: bun run ui:env:sepolia
+
+      - name: Build accumulator artifact
+        run: bun run build:merkle
+
+      - name: Run shared quality checks
+        run: bun run qa
+
+      - name: Run UI typecheck
+        run: bun run ui:typecheck
+
+      - name: Run UI tests
+        run: bun run ui:test
+
+  foundry:
+    name: Foundry Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.3.1
+
+      - name: Build accumulator artifact
+        run: bun run build:merkle
+
+      - name: Show Foundry version
+        run: forge --version
+
+      - name: Run contract tests
+        run: cd modules/foundry && forge test -vv
