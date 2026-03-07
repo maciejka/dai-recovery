@@ -9,9 +9,11 @@ Do not duplicate product or architecture rules in code comments or PR descriptio
 ## Project Structure
 - `modules/shared/src/accumulator.ts`: shared deterministic accumulator implementation.
 - `modules/accumulator/scripts/build-accumulator.ts`: build entrypoint.
-- `modules/shared/test/accumulator.test.ts`: shared accumulator test suite.
+- `modules/shared/test/accumulator.test.ts`: shared accumulator unit tests.
+- `modules/shared/test/accumulator.dataset.test.ts`: dataset-wide proof coverage and artifact freshness tests.
 - `modules/foundry/`: flat Foundry module (`RecoveryVerifier.sol`, `RecoveryVerifier.t.sol`, `DeployRecoveryVerifier.s.sol`, `foundry.toml`).
 - `modules/web/`: Vite UI app.
+- `.github/workflows/ci.yml`: CI workflow for Bun, UI, and Foundry checks.
 - `data/transfers.json`: versioned input snapshot.
 - `data/accumulator.json`: generated artifact (ignored by git).
 
@@ -41,8 +43,9 @@ Do not duplicate product or architecture rules in code comments or PR descriptio
 Before opening a PR, run:
 1. `bun run qa`
 2. `bun run build:merkle`
-3. `bun run ui:typecheck`
-4. `bun run ui:test`
+3. `bun run contracts:test`
+4. `bun run ui:typecheck`
+5. `bun run ui:test`
 
 ## Coding Conventions
 - TypeScript, ES modules, strict mode.

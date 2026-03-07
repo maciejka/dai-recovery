@@ -58,8 +58,21 @@ How lost amounts are verified for a wallet:
 Implementation and test anchors:
 - Shared deterministic builder: `modules/shared/src/accumulator.ts`
 - Onchain verifier: `modules/foundry/RecoveryVerifier.sol`
-- Determinism/proof tests: `modules/shared/test/accumulator.test.ts`
-- Solidity proof-vector tests: `modules/foundry/RecoveryVerifier.t.sol`
+- Shared unit tests: `modules/shared/test/accumulator.test.ts`
+- Dataset-wide proof and artifact-freshness tests: `modules/shared/test/accumulator.dataset.test.ts`
+- Solidity dataset-wide proof verification tests: `modules/foundry/RecoveryVerifier.t.sol`
+
+## CI
+
+Continuous integration runs via:
+- `.github/workflows/ci.yml`
+
+Current CI coverage:
+- `bun run build:merkle`
+- `bun run qa`
+- `bun run ui:typecheck`
+- `bun run ui:test`
+- `bun run contracts:test`
 
 ## Local End-to-End
 
