@@ -253,7 +253,7 @@ export default function App() {
                     {networkConfig.verifierAddress}
                   </a>
                 ) : (
-                  networkConfig.verifierAddress ?? 'Not configured'
+                  (networkConfig.verifierAddress ?? 'Not configured')
                 )}
               </span>
             </p>

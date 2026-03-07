@@ -6,6 +6,7 @@ out = "out"
 libs = ["lib"]
 optimizer = true
 optimizer_runs = 200
+fs_permissions = [{ access = "read", path = "../../data" }]
 
 [fmt]
 line_length = 100
