@@ -23,6 +23,9 @@ type LookupState =
   | { status: 'error'; message: string };
 
 const WEI_PER_DAI = 10n ** 18n;
+const GITHUB_REPOSITORY_URL = 'https://github.com/maciejka/dai-recovery';
+const DUNE_DASHBOARD_URL =
+  'https://dune.com/aundumla/lost-dai?utm_source=share&utm_medium=copy&utm_campaign=dashboard';
 
 function formatDaiAmount(amount: bigint): string {
   const whole = amount / WEI_PER_DAI;
@@ -227,6 +230,25 @@ export default function App() {
       <section className="panel">
         <header className="panel-header panel-header-hero">
           <h1>Dai Recovery</h1>
+          <p className="hero-links">
+            <a
+              className="meta-inline-link"
+              href={GITHUB_REPOSITORY_URL}
+              rel="noreferrer"
+              target="_blank"
+            >
+              GitHub
+            </a>
+            <span className="hero-links-divider">/</span>
+            <a
+              className="meta-inline-link"
+              href={DUNE_DASHBOARD_URL}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Dune Dashboard
+            </a>
+          </p>
         </header>
 
         <section className="general-info">

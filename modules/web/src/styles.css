@@ -108,6 +108,22 @@ body {
   letter-spacing: -0.01em;
 }
 
+.hero-links {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-500);
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hero-links-divider {
+  color: rgba(16, 46, 56, 0.35);
+}
+
 .header-actions {
   display: flex;
   align-items: center;

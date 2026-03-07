@@ -2,6 +2,9 @@
 
 Prototype for verifying Lost DAI recovery eligibility with a deterministic Merkle accumulator and an onchain verifier.
 
+- Site: [maciejka.github.io/dai-recovery](https://maciejka.github.io/dai-recovery/)
+- Dune dashboard: [Lost DAI](https://dune.com/aundumla/lost-dai?utm_source=share&utm_medium=copy&utm_campaign=dashboard)
+
 ## Prerequisites
 
 - Bun `1.3.x`
@@ -106,4 +109,4 @@ Behavior:
 - Publishes `modules/web/dist` to Pages
 
 Site URL:
-- `https://maciejka.github.io/dai-recovery/`
+- [maciejka.github.io/dai-recovery](https://maciejka.github.io/dai-recovery/)
