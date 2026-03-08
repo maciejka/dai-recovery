@@ -11,6 +11,8 @@
     "contracts:deploy:sepolia": "cd modules/foundry && forge script DeployRecoveryVerifier.s.sol:DeployRecoveryVerifier --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv",
     "contracts:local:up": "bash modules/foundry/scripts/local-up.sh",
     "contracts:local:down": "bash modules/foundry/scripts/local-down.sh",
+    "formal:fixtures": "bun run formal/lean/scripts/generate-fixtures.ts",
+    "formal:lean": "bun run formal:fixtures && cd formal/lean && ~/.elan/bin/lake build",
     "ui:env:anvil": "node modules/web/scripts/sync-env.mjs anvil",
     "ui:env:sepolia": "node modules/web/scripts/sync-env.mjs sepolia",
     "ui:dev": "bun run --cwd modules/web dev -- --mode sepolia",

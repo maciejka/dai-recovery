@@ -1,0 +1,87 @@
+import Mathlib
+
+set_option autoImplicit false
+
+namespace DaiRecoveryFormal
+
+namespace Fixtures
+
+structure FixtureClaim where
+  address : String
+  amount : String
+  proof : List String
+deriving Repr
+
+def sampleRoot : String := "0xf77bf4ca4fd705f6097cb40123adf53cbf832811fbe035acbfc90b08bd4efbbd"
+
+def sampleClaims : List FixtureClaim :=
+[
+  {
+    address := "0x00114fb22331af3477c43ce79fd43d0bd71b5fa2"
+    amount := "6598519681826828436"
+    proof := [
+      "0xd9343b5208551bb96e91d265967e2d48b29a9ba71c1bd0f253b05581b2e9cf03",
+      "0xf86b69a7d3117c96195aab66ccd902db9d2e0a0d62fe708122f5b6fda20c9de8",
+      "0x832f88d7cbaa156916464ff61710b6a633b0ed09b07b21499fd452d62fe48254",
+      "0x0bc4eb1346436fa3a6b8b464825fffdb65259f01cac7f9573222c1969e4ceb3f",
+      "0xbf14ee571eabb1de5647d5c057fcf024262d93ffa6501fe26cc3b3f8e7018d7f",
+      "0x4c6dd176bc0b99f1ee644a05a43d34aaa85b58b920cdb1abf3849c8c4606e94b",
+      "0x1e6fdff944c49959c018341e4fa1460c8fd3d3ab40d2a79c929c9b0db13dc02a",
+      "0xc71efc2a298428c1f7d4c1f37815d5bcaa0eb366844fd4ae89b11f7a1a088905",
+      "0x16e0c706ea44490df2d39db31bfec83808316ae3e59a5e21545614f5d112ff02",
+      "0x5e7b9f9814327b760aeef32f6c0f30a4dd238efbf5152d300baa96f3cedcbad1"
+    ]
+  },
+  {
+    address := "0x0054eccba7e555e3a1eac3d79bfd8be72879fc36"
+    amount := "101000000000000000"
+    proof := [
+      "0xbb2dc7dfb02202258efcdd8e83990db2cbec4e0abf85a8241fb9ae586ece02ec",
+      "0xf86b69a7d3117c96195aab66ccd902db9d2e0a0d62fe708122f5b6fda20c9de8",
+      "0x832f88d7cbaa156916464ff61710b6a633b0ed09b07b21499fd452d62fe48254",
+      "0x0bc4eb1346436fa3a6b8b464825fffdb65259f01cac7f9573222c1969e4ceb3f",
+      "0xbf14ee571eabb1de5647d5c057fcf024262d93ffa6501fe26cc3b3f8e7018d7f",
+      "0x4c6dd176bc0b99f1ee644a05a43d34aaa85b58b920cdb1abf3849c8c4606e94b",
+      "0x1e6fdff944c49959c018341e4fa1460c8fd3d3ab40d2a79c929c9b0db13dc02a",
+      "0xc71efc2a298428c1f7d4c1f37815d5bcaa0eb366844fd4ae89b11f7a1a088905",
+      "0x16e0c706ea44490df2d39db31bfec83808316ae3e59a5e21545614f5d112ff02",
+      "0x5e7b9f9814327b760aeef32f6c0f30a4dd238efbf5152d300baa96f3cedcbad1"
+    ]
+  },
+  {
+    address := "0x005709561fd053b45647d7c394c746e7f6d46829"
+    amount := "691979610330000000000"
+    proof := [
+      "0xf17c701ba7e0bfd05b9ec0c2f66cbc728d871d85f041178ace783b36b44c87e9",
+      "0x0921d3692edaaed4ba5dea7c7152cccea84ca1f5dbc40ae6f42a1a001a393bde",
+      "0x832f88d7cbaa156916464ff61710b6a633b0ed09b07b21499fd452d62fe48254",
+      "0x0bc4eb1346436fa3a6b8b464825fffdb65259f01cac7f9573222c1969e4ceb3f",
+      "0xbf14ee571eabb1de5647d5c057fcf024262d93ffa6501fe26cc3b3f8e7018d7f",
+      "0x4c6dd176bc0b99f1ee644a05a43d34aaa85b58b920cdb1abf3849c8c4606e94b",
+      "0x1e6fdff944c49959c018341e4fa1460c8fd3d3ab40d2a79c929c9b0db13dc02a",
+      "0xc71efc2a298428c1f7d4c1f37815d5bcaa0eb366844fd4ae89b11f7a1a088905",
+      "0x16e0c706ea44490df2d39db31bfec83808316ae3e59a5e21545614f5d112ff02",
+      "0x5e7b9f9814327b760aeef32f6c0f30a4dd238efbf5152d300baa96f3cedcbad1"
+    ]
+  },
+  {
+    address := "0x0093e5f2a850268c0ca3093c7ea53731296487eb"
+    amount := "48448449620000000000"
+    proof := [
+      "0x236277b644662c568641ef1273b282c19d578f252512fc80fdc1e7c1b5811338",
+      "0x0921d3692edaaed4ba5dea7c7152cccea84ca1f5dbc40ae6f42a1a001a393bde",
+      "0x832f88d7cbaa156916464ff61710b6a633b0ed09b07b21499fd452d62fe48254",
+      "0x0bc4eb1346436fa3a6b8b464825fffdb65259f01cac7f9573222c1969e4ceb3f",
+      "0xbf14ee571eabb1de5647d5c057fcf024262d93ffa6501fe26cc3b3f8e7018d7f",
+      "0x4c6dd176bc0b99f1ee644a05a43d34aaa85b58b920cdb1abf3849c8c4606e94b",
+      "0x1e6fdff944c49959c018341e4fa1460c8fd3d3ab40d2a79c929c9b0db13dc02a",
+      "0xc71efc2a298428c1f7d4c1f37815d5bcaa0eb366844fd4ae89b11f7a1a088905",
+      "0x16e0c706ea44490df2d39db31bfec83808316ae3e59a5e21545614f5d112ff02",
+      "0x5e7b9f9814327b760aeef32f6c0f30a4dd238efbf5152d300baa96f3cedcbad1"
+    ]
+  }
+]
+
+end Fixtures
+
+end DaiRecoveryFormal
